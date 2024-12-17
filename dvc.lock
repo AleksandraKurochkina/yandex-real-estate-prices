@@ -1,0 +1,69 @@
+schema: '2.0'
+stages:
+  get_data:
+    cmd: python part2_dvc/scripts/data.py
+    deps:
+    - path: part2_dvc/scripts/data.py
+      hash: md5
+      md5: 4ec5bdb0a5d48fdfad45905da5793212
+      size: 965
+    params:
+      params.yaml:
+        index_col: id
+    outs:
+    - path: part2_dvc/data/initial_data.csv
+      hash: md5
+      md5: 0c61b0a354b72bc5b9fb65295785d9e9
+      size: 13966223
+  fit_model:
+    cmd: python part2_dvc/scripts/fit.py
+    deps:
+    - path: part2_dvc/data/initial_data.csv
+      hash: md5
+      md5: 0c61b0a354b72bc5b9fb65295785d9e9
+      size: 13966223
+    - path: part2_dvc/scripts/fit.py
+      hash: md5
+      md5: 274cc3913d8d096758fd0cead4b68b79
+      size: 1263
+    params:
+      params.yaml:
+        n_estimators: 100
+        one_hot_drop: if_binary
+        random_state: 42
+        target_col: price
+    outs:
+    - path: part2_dvc/models/fitted_model.pkl
+      hash: md5
+      md5: 4e403a393d7af7307c18d1d727274cfe
+      size: 304190
+  evaluate_model:
+    cmd: python part2_dvc/scripts/evaluate.py
+    deps:
+    - path: part2_dvc/data/initial_data.csv
+      hash: md5
+      md5: 0c61b0a354b72bc5b9fb65295785d9e9
+      size: 13966223
+    - path: part2_dvc/models/fitted_model.pkl
+      hash: md5
+      md5: 4e403a393d7af7307c18d1d727274cfe
+      size: 304190
+    - path: part2_dvc/scripts/evaluate.py
+      hash: md5
+      md5: af31672c4976f379ff777052c58eb301
+      size: 1003
+    params:
+      params.yaml:
+        metrics:
+        - neg_mean_absolute_error
+        - r2
+        n_jobs: -1
+        n_splits: 5
+        random_state: 42
+        shuffle: true
+        target_col: price
+    outs:
+    - path: part2_dvc/cv_results/cv_res.json
+      hash: md5
+      md5: a241ba68788e4bbfccc3cbec3d4e4f38
+      size: 104
