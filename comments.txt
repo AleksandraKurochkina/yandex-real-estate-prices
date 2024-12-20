@@ -1,0 +1,8 @@
+Вопрос относительно отправки сообщений. Я вынесла в .env token и chat_id. Но как только я меняю соответствующие значения, сообщения перестают приходить.
+hook = TelegramHook(telegram_conn_id = 'test', token='7994940495:AAELYlRm8oXYj4si4gQedvhChTLUoBE34L4',
+                        chat_id='-4672204489')
+сообщения приходят
+hook1 = TelegramHook(telegram_conn_id='test',
+                        token=token,
+                        chat_id=chat_id)
+сообщения не приходят
