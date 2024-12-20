@@ -1,9 +1,10 @@
 # part1_airflow/plugins/steps/etl.py
 
-def create_table(**kwargs):
-    from sqlalchemy import MetaData, Table, Column, Integer, String, inspect, Float
-    from airflow.providers.postgres.hooks.postgres import PostgresHook
+from sqlalchemy import MetaData, Table, Column, Integer, String, inspect, Float, Boolean, Numeric
+from airflow.providers.postgres.hooks.postgres import PostgresHook
+import pandas as pd
 
+def create_table(**kwargs):
     hook = PostgresHook('destination_db')
     conn = hook.get_sqlalchemy_engine()
     metadata = MetaData()
@@ -16,10 +17,10 @@ def create_table(**kwargs):
         Column('kitchen_area', Float),
         Column('living_area', Float),
         Column('rooms', Integer),
-        Column('is_apartment', String),
-        Column('studio', String),
+        Column('is_apartment', Boolean),
+        Column('studio', Boolean),
         Column('total_area', Float),
-        Column('price', Float),
+        Column('price', Numeric),
         Column('build_year', Integer),
         Column('building_type_int', Integer),
         Column('latitude', Float),
@@ -27,15 +28,12 @@ def create_table(**kwargs):
         Column('ceiling_height', Float),
         Column('flats_count', Integer),
         Column('floors_total', Integer),
-        Column('has_elevator', String)
+        Column('has_elevator', Boolean)
     )
     if not inspect(conn).has_table(flats_table.name):
         metadata.create_all(conn) 
 
 def extract(**kwargs):
-    from airflow.providers.postgres.hooks.postgres import PostgresHook
-    import pandas as pd
-
     hook = PostgresHook('destination_db')
     conn = hook.get_conn()
     sql = f"""
@@ -52,8 +50,6 @@ def extract(**kwargs):
     ti.xcom_push('extracted_data', data)
 
 def load(**kwargs):
-    from airflow.providers.postgres.hooks.postgres import PostgresHook
-
     ti = kwargs['ti']
     data = ti.xcom_pull(task_ids='extract', key='extracted_data')
     hook = PostgresHook('destination_db')

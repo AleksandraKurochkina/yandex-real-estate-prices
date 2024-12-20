@@ -1,9 +1,10 @@
 #part1_airflow/plugins/steps/clean_etl.py
 
-def create_table(**kwargs):
-    from sqlalchemy import MetaData, Table, Column, Integer, Float, String, inspect
-    from airflow.providers.postgres.hooks.postgres import PostgresHook
+from sqlalchemy import MetaData, Table, Column, Integer, Float, String, inspect, Boolean, Numeric
+from airflow.providers.postgres.hooks.postgres import PostgresHook
+import pandas as pd
 
+def create_table(**kwargs):
     hook = PostgresHook('destination_db')
     conn = hook.get_sqlalchemy_engine()
     metaData = MetaData()
@@ -16,10 +17,10 @@ def create_table(**kwargs):
         Column('kitchen_area', Float),
         Column('living_area', Float),
         Column('rooms', Integer),
-        Column('is_apartment', String),
-        Column('studio', String),
+        Column('is_apartment', Boolean),
+        Column('studio', Boolean),
         Column('total_area', Float),
-        Column('price', Float),
+        Column('price', Numeric),
         Column('build_year', Integer),
         Column('building_type_int', Integer),
         Column('latitude', Float),
@@ -27,15 +28,12 @@ def create_table(**kwargs):
         Column('ceiling_height', Float),
         Column('flats_count', Integer),
         Column('floors_total', Integer),
-        Column('has_elevator', String)
+        Column('has_elevator', Boolean)
     )
     if not inspect(conn).has_table(flats_clean_table.name):
         metaData.create_all(conn)
     
 def extract(**kwargs):
-    from airflow.providers.postgres.hooks.postgres import PostgresHook
-    import pandas as pd 
-
     hook = PostgresHook('destination_db')
     conn = hook.get_conn()
     sql = f"""
@@ -52,18 +50,19 @@ def extract(**kwargs):
     ti.xcom_push('extracted_data', data)
 
 def transform(**kwargs):
-    import pandas as pd
-
     ti = kwargs['ti']
     data = ti.xcom_pull(task_ids='extract', key='extracted_data')
     
     #duplicates
     features = data.drop(columns='id').columns.tolist()
-    is_duplicated = data.duplicated(subset=features, keep=False)
+    is_duplicated = data.duplicated(subset=features, keep='first')
     data = data[~is_duplicated].reset_index(drop=True)
 
+    #0 in prices
+    data = data[data['price'] != 0]
+
     #0 to nans
-    non_zero_features = ['kitchen_area', 'living_area', 'rooms', 'total_area', 'price', 'build_year', 'ceiling_height', 
+    non_zero_features = ['kitchen_area', 'living_area', 'rooms', 'total_area', 'build_year', 'ceiling_height', 
                      'flats_count', 'floors_total']
     data[non_zero_features] = data[non_zero_features].replace(0, float('nan'))
 
@@ -96,8 +95,6 @@ def transform(**kwargs):
     ti.xcom_push('transformed_data', data)
 
 def load(**kwargs):
-    from airflow.providers.postgres.hooks.postgres import PostgresHook
-
     ti = kwargs['ti']
     data = ti.xcom_pull(task_ids='transform', key='transformed_data')
     hook = PostgresHook('destination_db')

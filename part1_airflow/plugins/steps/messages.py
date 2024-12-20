@@ -1,7 +1,13 @@
 # part1_airflow/plugins/steps/messages.py
 
+from airflow.providers.telegram.hooks.telegram import TelegramHook
+from dotenv import load_dotenv
+import os
+
 def send_telegram_success_message(context): # на вход принимаем словарь со контекстными переменными
-    from airflow.providers.telegram.hooks.telegram import TelegramHook
+    load_dotenv()
+    token = os.environ.get('TOKEN')
+    chat_id = os.environ.get('CHAT_ID')
     hook = TelegramHook(telegram_conn_id='test',
                         token='7994940495:AAELYlRm8oXYj4si4gQedvhChTLUoBE34L4',
                         chat_id='-4672204489')
@@ -14,13 +20,16 @@ def send_telegram_success_message(context): # на вход принимаем �
     }) # отправление сообщения 
 
 def send_telegram_failure_message(context):
-    from airflow.providers.telegram.hooks.telegram import TelegramHook
-    hook = TelegramHook(telegram_conn_id = 'test', token = '7994940495:AAELYlRm8oXYj4si4gQedvhChTLUoBE34L4', chat_id = '-4672204489')
+    load_dotenv()
+    token = os.environ.get('TOKEN')
+    chat_id = os.environ.get('CHAT_ID')
+    hook = TelegramHook(telegram_conn_id = 'test', token='7994940495:AAELYlRm8oXYj4si4gQedvhChTLUoBE34L4',
+                        chat_id='-4672204489')
     run_id = context['run_id']
     task_instance_key_str = context['task_instance_key_str']
     
     message = f'Исполнение DAG c id={run_id} завершено с ошибкой! Вот больше инфы: {task_instance_key_str}'
     hook.send_message({
-        'chat_id': '-4672204489',
+        'chat_id': chat_id,
         'text': message
     })
