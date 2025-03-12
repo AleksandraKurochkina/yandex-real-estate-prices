@@ -9,13 +9,13 @@ def send_telegram_success_message(context): # на вход принимаем �
     token = os.environ.get('TOKEN')
     chat_id = os.environ.get('CHAT_ID')
     hook = TelegramHook(telegram_conn_id='test',
-                        token='7994940495:AAELYlRm8oXYj4si4gQedvhChTLUoBE34L4',
-                        chat_id='-4672204489')
+                        token='',
+                        chat_id='')
     run_id = context['run_id']
     
     message = f'Исполнение DAG с id={run_id} прошло успешно!' # определение текста сообщения
     hook.send_message({
-        'chat_id': '-4672204489',
+        'chat_id': '',
         'text': message
     }) # отправление сообщения 
 
@@ -23,8 +23,8 @@ def send_telegram_failure_message(context):
     load_dotenv()
     token = os.environ.get('TOKEN')
     chat_id = os.environ.get('CHAT_ID')
-    hook = TelegramHook(telegram_conn_id = 'test', token='7994940495:AAELYlRm8oXYj4si4gQedvhChTLUoBE34L4',
-                        chat_id='-4672204489')
+    hook = TelegramHook(telegram_conn_id = 'test', token='',
+                        chat_id='')
     run_id = context['run_id']
     task_instance_key_str = context['task_instance_key_str']
     
