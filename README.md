@@ -2,6 +2,7 @@
 
 DAGs 1: part1_airflow/dags/etl.py
 Функции 1: part1_airflow/plugins/steps/etl.py
+
 DAGs 2: part1_airflow/dags/clean_etl.py
 Функции 2: part1_airflow/plugins/steps/clean_etl.py
 
